@@ -346,3 +346,7 @@ Your database is untouched — it lives in the `pgdata` volume, which neither co
 ??? bug "'docker compose' complains about nginx/certs not found"
     You skipped the certificate step, or are in the wrong directory. Every command must run inside
     `notesapp/`.
+
+??? bug "Error mentioning '!reset' or 'reset' when starting the HTTPS overlay"
+    Your Docker Compose is older than 2.24 (when `!reset` was added). Update Docker Desktop (the
+    easiest fix), then retry. Check your version with `docker compose version`.

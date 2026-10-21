@@ -104,17 +104,18 @@ You are going to measure how strong that actually is.
     - Time taken: **___ ms**
     - **Which accounts did NOT crack?** ___________
 
-    Then check your prediction. (Expect **4 of 6** — the genuinely common passwords — in a few
-    milliseconds. Two survive.)
+    Now compare with the guess you wrote down. Surprised?
 
-!!! question "Why did those two survive? (discuss with your pair)"
-    You know all 6 passwords — they are in `make_dump.py`. Look at the two that did not crack.
+!!! question "Did everything crack? If not — why not? (discuss with your pair)"
+    You know all 6 passwords — they are in `make_dump.py`. Look at the ones that did **not** crack,
+    and work out what they have in common before you open the answer.
 
     ??? success "Answer"
-        `marie` used `mariepw` — not a dictionary word, so it is not in the public list (yet — see the
-        bonus). `raj` used a long random password that no wordlist contains. **Cracking is not
-        magic.** It feeds on weak and predictable passwords. A fast, unsalted hash just makes each
-        guess instant — it does not invent passwords the attacker never guesses.
+        Two accounts survived. `marie` used `mariepw` — not a dictionary word, so it is not in the
+        public list (yet — see the bonus). `raj` used a long random password that no wordlist
+        contains. **Cracking is not magic.** It feeds on weak and predictable passwords. A fast,
+        unsalted hash just makes each guess instant — it does not invent passwords the attacker never
+        guesses.
 
 **Write Finding 1** (one line each — this goes in your Audit summary):
 

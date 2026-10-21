@@ -46,5 +46,4 @@ nav:
   - "Class 5 — HTTPS & passwords":
       - "Lab 0 — Set up before class": class5/setup.md
       - "Lab 1 — HTTPS for NotesApp": class5/https-lab.md
-      - "Lab 2A — Crack weak hashes": class5/password-crack.md
-      - "Lab 2B — Fix it with Argon2": class5/password-fix.md
+      - "Lab 2 — Password storage audit": class5/password-audit.md

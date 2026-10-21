@@ -16,8 +16,7 @@ Missing either one, and the other does not save you. Today you build both.
 |---|---|---|
 | [Lab 0 — Set up before class](class5/setup.md) | Install Docker + Wireshark, clone NotesApp | ~15 min, **at home** |
 | [Lab 1 — HTTPS for NotesApp](class5/https-lab.md) | Capture a password over HTTP, turn on HTTPS, capture again | ~45 min |
-| [Lab 2A — Crack weak hashes](class5/password-crack.md) | Crack an unsalted-MD5 dump with a dictionary attack | ~15 min |
-| [Lab 2B — Fix it with Argon2](class5/password-fix.md) | Migrate NotesApp's real login to Argon2, upgrade-on-login | ~20–25 min |
+| [Lab 2 — Password storage audit](class5/password-audit.md) | Crack weak hashes, fix with Argon2, measure how much the fix buys | ~35–40 min |
 
 !!! warning "Ethics — only your own targets"
     Every attack in these labs runs **only** on data you generated yourself, from the course's own

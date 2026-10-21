@@ -131,9 +131,25 @@ FINDING 1 — stored passwords (unsalted MD5)
 
 ## Remediation — migrate NotesApp to Argon2
 
-Only `raj`'s random password survived — and you cannot ship security that assumes every user is
-`raj`. The real fix protects the `liwei`s and `marie`s too, by making **every single guess
-expensive**, strong or weak. That is Argon2.
+!!! question "The stubborn objection — argue it with your pair before reading on"
+    Someone says: *"`raj`'s password survived even MD5. So the real fix is just — tell users to pick
+    strong passwords. Why bother adding Argon2 at all?"*
+
+    Are they right? Take a minute and decide together.
+
+    ??? success "Here's the honest answer"
+        **Half right — and getting the other half exact is the whole point of today.**
+
+        - **True:** a long random password like `raj`'s is hard to crack even with MD5. For *that one
+          account*, the user protected themselves. You are not wrong that strong passwords help.
+        - **But you are the developer, not the user.** Your table holds *everyone*, and most people
+          pick `123456`. The question "is this password store safe?" is answered by the **weakest**
+          password in it, not the strongest — one admin with `password1` is already a breach.
+        - **You can *advise* strong passwords. You cannot *enforce* them.** Argon2 is the one control
+          that protects the users who didn't listen — and it costs you, the developer, almost nothing.
+
+        So: **a strong password protects you; Argon2 protects your users.** A real system needs both,
+        but only one of them is your job to *guarantee* — and it is the one you are about to build.
 
 Now fix it on the real app. You are adding Argon2 **and** upgrading each account the moment its owner
 next logs in — no migration script, no downtime. NotesApp should be running (`docker compose up -d`).

@@ -97,20 +97,19 @@ You are going to measure how strong that actually is.
     Run it: `python3 crack/make_dump.py && python3 crack/crack.py`
     (Windows: use `python` instead of `python3`.)
 
-!!! success "📏 Measure — record these three things"
+!!! success "📏 Measure — record what you got"
     Run the attack and read the output:
 
     - Accounts cracked: **___ / 6**
     - Time taken: **___ ms**
-    - **Which accounts did NOT crack?** ___________
 
     Now compare with the guess you wrote down. Surprised?
 
-!!! question "Did everything crack? If not — why not? (discuss with your pair)"
-    You know all 6 passwords — they are in `make_dump.py`. Look at the ones that did **not** crack,
-    and work out what they have in common before you open the answer.
+??? question "Finished running? Open this to debrief your result — not before"
+    Did **every** account fall? Look at your output. If any held out, work out what those passwords
+    have in common before you open the answer. You know all 6 — they are in `make_dump.py`.
 
-    ??? success "Answer"
+    ??? success "The answer"
         Two accounts survived. `marie` used `mariepw` — not a dictionary word, so it is not in the
         public list (yet — see the bonus). `raj` used a long random password that no wordlist
         contains. **Cracking is not magic.** It feeds on weak and predictable passwords. A fast,

@@ -141,15 +141,22 @@ Lab 1's HTTPS setup running).
 !!! success "Checkpoint"
     The login succeeds, same as before.
 
+!!! question "Predict with your pair — before you run the next command"
+    `alice` just logged in **once**, with her normal password — nothing else happened. Look at your
+    Change 2 code and decide: what does the `password` column hold for `alice` **now**? The same
+    `alicepw`? Something else? Why?
+
 Check the database again:
 
 ```bash
 docker compose exec db psql -U notesapp -d notesapp -c "SELECT username, password FROM users WHERE username = 'alice';"
 ```
 
-!!! success "Expected output now"
-    The `password` column shows something like `$argon2id$v=19$m=65536,t=3,p=4$...` — a long Argon2
-    hash, not `alicepw` anymore.
+??? success "Were you right?"
+    The `password` column now shows something like `$argon2id$v=19$m=65536,t=3,p=4$...` — a long Argon2
+    hash, not `alicepw` anymore. Her single normal login hit the `else` branch of your code, which
+    checked the old plain-text password **and** re-hashed it on the spot. No migration script, no
+    downtime, nothing she had to do. This is how real systems migrate password storage on live users.
 
 Log out, log back in as `alice` / `alicepw` one more time.
 

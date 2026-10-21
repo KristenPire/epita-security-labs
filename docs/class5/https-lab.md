@@ -144,15 +144,39 @@ network — the leg an outside attacker can never reach.
     Port 80 redirects to HTTPS; port 443 serves TLS with your cert; `proxy_pass` forwards to Flask
     inside Docker only.
 
-    **3. Launch with the HTTPS overlay:**
+    **3. Create `docker-compose.https.yml`** with this content. It adds nginx in front, and stops
+    publishing the app's own port so the only way in is through HTTPS:
+
+    ```yaml
+    services:
+      web:
+        # Compose MERGES ports across files, so clear the base 8080 explicitly -
+        # otherwise the app stays reachable over plain HTTP and the fix is pointless.
+        ports: !reset []
+        expose:
+          - "5000"
+
+      nginx:
+        image: nginx:1.27
+        depends_on:
+          - web
+        ports:
+          - "443:443"
+          - "80:80"
+        volumes:
+          - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+          - ./nginx/certs:/etc/nginx/certs:ro
+    ```
+
+    Then launch:
 
     ```bash
-    cp docker-compose.https.yml.example docker-compose.https.yml
     docker compose down
     docker compose -f docker-compose.yml -f docker-compose.https.yml up -d --build
     ```
 
-    `docker compose ps` should now show three containers: `db`, `web`, `nginx`.
+    `docker compose ps` should now show three containers: `db`, `web`, `nginx` — and `web` no longer
+    lists a published `8080` port.
 
     **4. Open <https://localhost>.** Your browser shows a warning and makes you click **Advanced →
     Proceed**. Do that for now — *why* it warns is exactly Finding 2, so don't dismiss the question,

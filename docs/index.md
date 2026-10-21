@@ -15,7 +15,7 @@ Missing either one, and the other does not save you. Today you build both.
 | Lab | What you do | Time |
 |---|---|---|
 | [Lab 0 — Set up before class](class5/setup.md) | Install Docker + Wireshark, clone NotesApp | ~15 min, **at home** |
-| [Lab 1 — HTTPS for NotesApp](class5/https-lab.md) | Capture a password over HTTP, turn on HTTPS, capture again | ~45 min |
+| [Lab 1 — Traffic-in-transit audit](class5/https-lab.md) | Prove a login leaks over HTTP, turn on HTTPS, prove it stops, judge the cert | ~45 min |
 | [Lab 2 — Password storage audit](class5/password-audit.md) | Crack weak hashes, fix with Argon2, measure how much the fix buys | ~35–40 min |
 
 !!! warning "Ethics — only your own targets"

@@ -120,11 +120,11 @@ You are going to measure how strong that actually is.
 
 ```
 FINDING 1 — stored passwords (unsalted MD5)
-  Exposed:         ___ of 6 accounts, in ___ ms, with a public wordlist
-  Why those fell:  ________________________________
-  Which survived & why: ___________________________
-  Severity:        (Low / Med / High) because _______
-  Fix (1 line):    ________________________________
+  Cracked:          ___ of 6 accounts, in ___ ms, with a public wordlist
+  Why those fell:   ________________________________
+  Any that held out, & why: ________________________
+  Severity:         (Low / Med / High) because _______
+  Fix (1 line):     ________________________________
 ```
 
 ---
@@ -293,8 +293,8 @@ Copy your fills into one place:
 NOTESAPP PASSWORD AUDIT — pair: ____________
 
 FINDING 1 — stored passwords (unsalted MD5)
-  Exposed:      ___/6 cracked in ___ ms, public wordlist
-  Survived & why: ____
+  Cracked:      ___/6 in ___ ms, public wordlist
+  Held out & why: ____
   Severity:     ___ because ____
   Fix:          ____
 

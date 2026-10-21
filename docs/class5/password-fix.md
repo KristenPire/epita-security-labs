@@ -55,56 +55,70 @@ Find the `login()` view (`@app.route("/login", ...)`).
     **password** is checked, which happens to mean the password itself can no longer sit inside the
     SQL string, since it is no longer compared with `=`.
 
-Replace the query and the check with:
+Do **not** re-type the whole view. You are making **three small changes** to the `login()` code you
+already have. Make them in order.
+
+### Change 1 — fetch the stored password, stop letting SQL check it
+
+The query today checks the password inside the SQL (`AND password = '...'`). We want to fetch the
+stored password and check it ourselves in Python instead. Edit the two string lines:
 
 ```python
-        # Flaw #8 (SQL injection) is intentionally left as-is here - fixed in the
-        # December class. We only changed how the password itself is verified below.
         query = (
-            "SELECT id, username, role, password FROM users "
-            "WHERE username = '" + username + "'"
+            "SELECT id, username, role, password FROM users "   # (1) add  , password
+            "WHERE username = '" + username + "'"               # (2) drop  AND password = ...
         )
-        conn = get_db()
-        cur = conn.cursor()
-        try:
-            cur.execute(query)
-            row = cur.fetchone()
-        except Exception as e:
-            error = f"Query error: {e}"
-            row = None
+```
 
+Only those two lines change. Leave `username` concatenated as-is — that is the planted SQL injection,
+left for December.
+
+### Change 2 — verify (and upgrade) the password in Python
+
+Right now, straight after the `try/except` that sets `row`, the code does `conn.close()` then
+`if row:`. **Insert this block between them** — just before the `conn.close()` line:
+
+```python
         authenticated = False
         if row:
             stored = row["password"]
             if is_argon2_hash(stored):
+                # Already migrated: check with Argon2.
                 try:
                     ph.verify(stored, password)
                     authenticated = True
                 except (VerifyMismatchError, InvalidHash):
                     authenticated = False
             else:
-                # Legacy plain-text account. Check it, then upgrade it on the spot.
+                # Legacy plain-text account: check it, then upgrade it on the spot.
                 if stored == password:
                     authenticated = True
                     new_hash = ph.hash(password)
-                    upgrade_cur = conn.cursor()
-                    upgrade_cur.execute(
+                    conn.cursor().execute(
                         "UPDATE users SET password = %s WHERE id = %s",
                         (new_hash, row["id"]),
                     )
                     log(f"upgraded {row['username']} to argon2")
+```
 
-        conn.close()
+Read it before you run it — this block **is** the lesson. Two cases: an already-Argon2 account is
+verified with `ph.verify`; a legacy plain-text account is checked, and if it matches, re-hashed and
+written back right away, so it is migrated the moment its owner logs in.
+
+### Change 3 — gate the login on `authenticated`, not `row`
+
+Find the `if row:` line (just after `conn.close()`) and change it to:
+
+```python
         if authenticated:
 ```
 
-This last line (`if authenticated:`) replaces the old `if row:` — keep everything below it
-(`session["user_id"] = ...` and so on) exactly as it was.
+Everything below it (`session["user_id"] = ...` and so on) stays exactly as it was.
 
-!!! note "Why the UPDATE uses %s but the SELECT does not"
-    The `UPDATE` above uses `%s` placeholders (psycopg2 parameter substitution) — the correct, safe
-    way to run a query with a value you do not fully control. We use it here because this one
-    genuinely is **not** the planted flaw; only the username lookup above is.
+!!! note "Why the UPDATE uses %s but the username lookup does not"
+    The `UPDATE` uses `%s` placeholders (psycopg2 parameter substitution) — the correct, safe way to
+    run a query with a value you do not fully control. We use it here because this one genuinely is
+    **not** the planted flaw; only the username lookup is (and that stays, for December).
 
 ## Step 4 — Rebuild and test
 
@@ -148,10 +162,13 @@ Log out, log back in as `alice` / `alicepw` one more time.
     as before the change — an attacker watching the login form cannot tell a migrated account from a
     legacy one just by the error message.
 
-!!! note "We don't re-crack the Argon2 hash by hand"
-    Copy-pasting a hash value between 22 pairs is slow and typo-prone for not much payoff. The
-    instructor runs that comparison once, live, on the debrief slide right after this lab — just
-    watch and compare the timing to your own Lab 2A result.
+!!! note "Why we don't re-crack the new Argon2 hash here"
+    Copy-pasting a hash value by hand is slow and typo-prone for not much payoff, so just reason about
+    the result: in Lab 2A, the whole wordlist cracked all 6 MD5 accounts in **under one second**.
+    Argon2 is deliberately slow — roughly **0.1 second per single guess** on a laptop. Same wordlist,
+    same attacker: against Argon2 it goes from under a second to **hours**, purely because of the hash
+    algorithm's speed. That ~million-times slowdown, with nothing else changed, is the whole point of
+    Argon2. You will see this compared side by side on the debrief slide.
 
 ## Wrap-up checklist (confirm before leaving)
 

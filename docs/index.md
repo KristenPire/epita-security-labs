@@ -14,6 +14,7 @@ Missing either one, and the other does not save you. Today you build both.
 
 | Lab | What you do | Time |
 |---|---|---|
+| [Lab 0 — Set up before class](class5/setup.md) | Install Docker + Wireshark, clone NotesApp | ~15 min, **at home** |
 | [Lab 1 — HTTPS for NotesApp](class5/https-lab.md) | Capture a password over HTTP, turn on HTTPS, capture again | ~45 min |
 | [Lab 2A — Crack weak hashes](class5/password-crack.md) | Crack an unsalted-MD5 dump with a dictionary attack | ~15 min |
 | [Lab 2B — Fix it with Argon2](class5/password-fix.md) | Migrate NotesApp's real login to Argon2, upgrade-on-login | ~20–25 min |
@@ -39,5 +40,9 @@ You need:
 
 !!! tip "Work as a pair"
     One person drives the keyboard, the other reads steps out loud and checks the checkpoints — then
-    swap. Stuck for more than two minutes? Raise a hand. The instructor would rather help now than
-    have you blocked for the rest of the lab.
+    swap. Stuck for more than two minutes? Don't debug in silence — scroll to the **Troubleshooting**
+    box at the bottom of the page. Every common blocker is listed there with a fix.
+
+!!! warning "Do [Lab 0 — Setup](class5/setup.md) before class"
+    Installing Docker and Wireshark (especially on Windows) can need a reboot. Get the three setup
+    checkmarks green at home so you don't lose lab time to installs.

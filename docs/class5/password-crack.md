@@ -56,6 +56,11 @@ python3 crack/make_dump.py
 cat crack/leaked_users.txt
 ```
 
+!!! tip "Windows: `python3` not found?"
+    On Windows, use `python` instead of `python3` for every command in this lab (and `type` instead
+    of `cat` to print a file). If neither works, Python is not on your PATH — reopen your terminal
+    after installing Python, or use the "Add to PATH" option in the Python installer.
+
 !!! success "Expected output"
     Six lines, each `username:32-character-hex-string`, e.g.:
 

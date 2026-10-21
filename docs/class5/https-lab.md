@@ -15,9 +15,10 @@ Work inside your `notesapp/` clone. Every command below assumes you are in that 
     | ~40 | Part 3 done — second capture shows no readable password |
     | ~45 | Part 4 done — certificates compared |
 
-    Behind at the 30-minute mark? Skip straight to Part 3 using the instructor's reference
-    `nginx.conf` (ask for it) and come back to writing your own later — seeing the result matters
-    more today than typing every line yourselves.
+    Behind at the 30-minute mark? Skip straight to Part 3 by copying the ready-made `nginx.conf`
+    from [Part 2, Step 2](#step-2-write-the-nginx-configuration) exactly as written, and come back to
+    reading it line by line later — seeing the result matters more today than typing every line
+    yourselves.
 
 ## Part 0 — Start the app the old way (plain HTTP)
 
@@ -37,9 +38,10 @@ Do **not** log in yet — we want Wireshark running first.
 2. In the interface list, choose the **loopback** interface:
     - macOS: `Loopback: lo0`
     - Linux: `lo`
-    - Windows: `Npcap Loopback Adapter` — NotesApp runs inside Docker Desktop's VM on Windows, so if
-      you cannot see loopback traffic, ask the instructor (known Windows/Docker quirk, a fallback
-      demo will be shown instead).
+    - Windows: `Npcap Loopback Adapter`. If you do not see it, Npcap was installed without loopback
+      support — see [the Windows fix in Troubleshooting](#troubleshooting). On Windows, `localhost`
+      traffic can also be invisible because NotesApp runs inside Docker Desktop's VM — if you get
+      stuck, use the **sample capture fallback** in Troubleshooting so you can still do the exercise.
 3. In the filter bar at the top, type this and press Enter (it turns green when valid):
 
     ```
@@ -58,6 +60,17 @@ Do **not** log in yet — we want Wireshark running first.
 
 !!! success "Checkpoint"
     You should see several rows. Look for one with `Info` starting with `POST /login HTTP/1.1`.
+
+    ??? bug "I see nothing / no POST row — now what?"
+        Almost always the **wrong interface**. The capture only works on **loopback** (`lo0` / `lo` /
+        `Npcap Loopback Adapter`), because NotesApp runs on `localhost`. Fixes, in order:
+
+        1. Stop the capture, go back to step 2, pick the loopback interface, start again, log in again.
+        2. Check the filter reads exactly `tcp.port == 8080 and http` and is green. If your app runs on
+           a different port, match it.
+        3. Still nothing after logging in (common on Windows + Docker Desktop)? Use the **sample
+           capture** in [Troubleshooting](#troubleshooting) — real captured traffic you can open and
+           complete the exercise with.
 
 7. Right-click that row → **Follow** → **HTTP Stream**.
 8. A new window opens showing the full request and response as text. Scroll until you find a line
@@ -243,10 +256,29 @@ deletes.
     Something else on your machine is using that port (another local web server, or Docker already
     running the plain stack). Run `docker compose down` first, fully, before the HTTPS overlay `up`.
 
-??? bug "Wireshark shows nothing on loopback"
-    On Windows, Docker Desktop runs containers inside a Linux VM (WSL2), and loopback traffic to
-    `localhost` may not reach the Windows Npcap driver in a capturable way. Ask the instructor — we
-    keep a pre-recorded `.pcapng` capture for this case.
+??? bug "Wireshark shows nothing on loopback (Windows especially)"
+    **First, the common cause — Npcap without loopback support (Windows).** Re-run the Npcap installer
+    from [npcap.com](https://npcap.com/#download) on its own, and this time **tick "Support loopback
+    traffic capture"**. Reboot, reopen Wireshark — the `Npcap Loopback Adapter` now appears. Capture
+    on it.
+
+    **If it still shows nothing** (Docker Desktop runs containers in a WSL2 VM, and that traffic can
+    stay invisible to Npcap): use the **sample capture** below instead. It is a real HTTP login
+    capture — open it and do exactly the "Follow HTTP Stream → find the password" step, no live
+    capture needed.
+
+    **⬇ Download the sample capture: [`login-http.pcap`](assets/login-http.pcap)**
+
+    Open it in Wireshark (File → Open), right-click the `POST /login` row → **Follow** → **HTTP
+    Stream**, and you will see `username=alice&password=alicepw` in clear text — the same result the
+    live capture gives.
+
+    **One more independent check that works on every OS:** open your browser's DevTools (F12) →
+    **Network** tab → log in → click the `login` request → **Payload** / **Request** tab. You will
+    see the username and password in clear text there too. (Note: DevTools shows the browser's own
+    copy, so it looks the same over HTTPS — it proves the data is plaintext in the request, but only
+    Wireshark proves whether it is *also* readable on the wire. That difference is the whole point of
+    Part 3.)
 
 ??? bug "'docker compose' complains about nginx/certs not found"
     You skipped Step 1, or ran the commands from the wrong directory. You must be inside the

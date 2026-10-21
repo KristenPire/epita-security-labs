@@ -24,28 +24,39 @@ the defense that *feels* safe and that many real apps shipped: "we hashed them" 
 You are going to measure how strong that actually is.
 
 !!! question "Predict first, with your pair"
-    You build a dump of 6 accounts hashed with unsalted MD5, and attack it with a **14-word**
-    wordlist on your laptop — no GPU. Before you run it: **how many of the 6 fall, and how long does
-    it take?** Write your guess down.
+    You are handed a leaked table of 6 accounts, hashed with unsalted MD5. You attack it with a
+    **real public wordlist** — the kind that actually circulates, not something we tailored to these
+    accounts. Before you run it: **how many of the 6 fall, and how long does it take?** Will *all* of
+    them? Write your guess down.
 
 ??? note "How to build and run the attack (scaffolding — use it, or ask AI to)"
     This is the mechanical part. Copy it, or have AI generate it — the point is the result, not the
-    typing.
+    typing. The wordlist is a real one, **not** written around these passwords: some accounts will
+    fall, some will not. That is the honest version of this attack.
 
-    Make the folder:
+    Make the folder and get the wordlist:
 
     ```bash
     mkdir -p crack
     ```
 
-    `crack/make_dump.py` — hashes the course's seed accounts with unsalted MD5:
+    **⬇ Download the wordlist** (≈190 of the world's most common passwords, a small slice of what
+    attackers really use) and save it as `crack/wordlist.txt`:
+    [`common-passwords.txt`](assets/common-passwords.txt)
+
+    `crack/make_dump.py` — a leaked table from "some other app", with a realistic spread of password
+    strength. We hash each with unsalted MD5, exactly as that app would have:
 
     ```python
     import hashlib
 
     accounts = {
-        "admin": "admin123", "prof.turing": "teach123", "alice": "alicepw",
-        "bob": "bobpw", "carol": "carolpw", "mallory": "mallorypw",
+        "liwei": "123456",
+        "sofia": "iloveyou",
+        "tomk":  "qwerty123",
+        "aisha": "password1",
+        "marie": "mariepw",        # not a dictionary word - a predictable pattern
+        "raj":   "Gv7#pLm2!xQ",    # long and random
     }
     with open("crack/leaked_users.txt", "w") as f:
         for username, password in accounts.items():
@@ -53,26 +64,7 @@ You are going to measure how strong that actually is.
     print("wrote crack/leaked_users.txt")
     ```
 
-    `crack/wordlist.txt` — a tiny mixed list (generic + `<username>pw` guesses):
-
-    ```
-    password
-    password123
-    123456
-    qwerty
-    letmein123
-    admin123
-    teach123
-    alicepw
-    bobpw
-    carolpw
-    davepw
-    mallorypw
-    dragon123
-    sunshine1
-    ```
-
-    `crack/crack.py` — times itself so you get a real number:
+    `crack/crack.py` — tries every word in the real wordlist, and times itself:
 
     ```python
     import hashlib, time
@@ -105,27 +97,43 @@ You are going to measure how strong that actually is.
     Run it: `python3 crack/make_dump.py && python3 crack/crack.py`
     (Windows: use `python` instead of `python3`.)
 
-!!! success "📏 Measure — record these two numbers"
-    Run the attack and read the first output line:
+!!! success "📏 Measure — record these three things"
+    Run the attack and read the output:
 
     - Accounts cracked: **___ / 6**
     - Time taken: **___ ms**
+    - **Which accounts did NOT crack?** ___________
 
-    Then check your prediction. (You should see all 6, in a handful of milliseconds.)
+    Then check your prediction. (Expect **4 of 6** — the genuinely common passwords — in a few
+    milliseconds. Two survive.)
+
+!!! question "Why did those two survive? (discuss with your pair)"
+    You know all 6 passwords — they are in `make_dump.py`. Look at the two that did not crack.
+
+    ??? success "Answer"
+        `marie` used `mariepw` — not a dictionary word, so it is not in the public list (yet — see the
+        bonus). `raj` used a long random password that no wordlist contains. **Cracking is not
+        magic.** It feeds on weak and predictable passwords. A fast, unsalted hash just makes each
+        guess instant — it does not invent passwords the attacker never guesses.
 
 **Write Finding 1** (one line each — this goes in your Audit summary):
 
 ```
-FINDING 1 — stored passwords
-  Exposed:     ____________________________________
-  Evidence:    cracked ___/6 in ___ ms, 14-word list, no GPU
-  Severity:    (Low / Med / High) because ____________
-  Fix (1 line):____________________________________
+FINDING 1 — stored passwords (unsalted MD5)
+  Exposed:         ___ of 6 accounts, in ___ ms, with a public wordlist
+  Why those fell:  ________________________________
+  Which survived & why: ___________________________
+  Severity:        (Low / Med / High) because _______
+  Fix (1 line):    ________________________________
 ```
 
 ---
 
 ## Remediation — migrate NotesApp to Argon2
+
+Only `raj`'s random password survived — and you cannot ship security that assumes every user is
+`raj`. The real fix protects the `liwei`s and `marie`s too, by making **every single guess
+expensive**, strong or weak. That is Argon2.
 
 Now fix it on the real app. You are adding Argon2 **and** upgrading each account the moment its owner
 next logs in — no migration script, no downtime. NotesApp should be running (`docker compose up -d`).
@@ -256,8 +264,8 @@ FINDING 2 — the fix, measured
 
 !!! note "Why this isn't the same as re-running the crack"
     You are measuring *raw guessing speed*, which is what actually decides whether a real attacker
-    (with a huge wordlist, not our 14 words) wins. The wordlist size is the same for both hashes —
-    only the per-guess cost changed, and that is the entire story of Argon2.
+    (with a wordlist of millions, not ~190) wins. The wordlist is the same for both hashes — only the
+    per-guess cost changed, and that is the entire story of Argon2.
 
 ---
 
@@ -268,9 +276,9 @@ Copy your fills into one place:
 ```
 NOTESAPP PASSWORD AUDIT — pair: ____________
 
-FINDING 1 — stored passwords
-  Exposed:      ____
-  Evidence:     cracked ___/6 in ___ ms, 14-word list, no GPU
+FINDING 1 — stored passwords (unsalted MD5)
+  Exposed:      ___/6 cracked in ___ ms, public wordlist
+  Survived & why: ____
   Severity:     ___ because ____
   Fix:          ____
 
@@ -283,18 +291,21 @@ FINDING 2 — the fix, measured
 STATE: NotesApp now stores passwords with Argon2 (alice migrated on login).  ✅
 ```
 
-??? tip "Finished early? (optional) — crack an account the wordlist never contained"
-    Add `"eve": "evepw"` to `accounts` in `make_dump.py`, re-run it, re-run `crack.py` — `eve` stays
-    uncracked. Now make the attack smarter: generate a rule-based guess per user and test those too.
+??? tip "Finished early? (optional) — crack `marie` with a guessing rule"
+    `marie`'s password (`mariepw`) is not in any public wordlist, so the dictionary attack missed it.
+    But it follows a **pattern** — `<username>pw` — and an attacker who spots a pattern can generate
+    guesses from it. Add rule-based candidates and test them too:
 
     ```python
     rule_based = [f"{u}pw" for u in accounts]
     candidates = wordlist + rule_based
     ```
 
-    (loop over `candidates` instead of `wordlist`). Now `eve` falls. That is the jump from a plain
-    dictionary attack to a **rule-based** one — Hashcat and John the Ripper are built around exactly
-    this. Add it to your audit as a note: "wordlist size is not the limit; attacker creativity is."
+    (loop over `candidates` instead of `wordlist`). Now `marie` falls — **5 of 6**. Only `raj`, the
+    long random password, still survives. That is the jump from a plain dictionary attack to a
+    **rule-based** one — Hashcat and John the Ripper are built around exactly this. Add a note to your
+    audit: "the wordlist size is not the limit; attacker creativity is — the only thing that held was
+    a password with no pattern at all."
 
 ## Troubleshooting
 

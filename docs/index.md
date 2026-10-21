@@ -18,10 +18,6 @@ Missing either one, and the other does not save you. Today you build both.
 | [Lab 1 — Traffic-in-transit audit](class5/https-lab.md) | Prove a login leaks over HTTP, turn on HTTPS, prove it stops, judge the cert | ~45 min |
 | [Lab 2 — Password storage audit](class5/password-audit.md) | Crack weak hashes, fix with Argon2, measure how much the fix buys | ~35–40 min |
 
-!!! info "Project 2 launches today"
-    Your group project — a [command-line password manager](project2.md) — starts at the end of this
-    class. Groups of 2–3, due **12 Nov**, 25% of your grade. Read the brief tonight.
-
 !!! warning "Ethics — only your own targets"
     Every attack in these labs runs **only** on data you generated yourself, from the course's own
     seed data, or on your own NotesApp clone. The techniques are identical to what you would run

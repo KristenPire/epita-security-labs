@@ -47,4 +47,3 @@ nav:
       - "Lab 0 — Set up before class": class5/setup.md
       - "Lab 1 — Traffic-in-transit audit": class5/https-lab.md
       - "Lab 2 — Password storage audit": class5/password-audit.md
-  - "Project 2 — Password manager": project2.md

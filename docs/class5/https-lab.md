@@ -47,7 +47,8 @@ password — using **Wireshark**, a free tool anyone can download.
 
     1. Open **Wireshark**.
     2. Choose the **loopback** interface — macOS `Loopback: lo0` · Linux `lo` · Windows
-       `Npcap Loopback Adapter`. (NotesApp runs on `localhost`, so loopback is the only interface that
+       `Adapter for loopback traffic capture` (older Npcap calls it `Npcap Loopback Adapter`).
+       (NotesApp runs on `localhost`, so loopback is the only interface that
        sees it. Can't see it / nothing captures? See [Troubleshooting](#troubleshooting).)
     3. Filter bar — type this and press Enter (turns green when valid):
 
@@ -65,8 +66,9 @@ password — using **Wireshark**, a free tool anyone can download.
        **HTTP Stream**. A window opens with the full request as text.
 
     ??? bug "No `POST /login` row appears"
-        Almost always the **wrong interface** — it must be loopback (`lo0` / `lo` / `Npcap Loopback
-        Adapter`). Stop, reselect it, start again, log in again. Still nothing (common on Windows +
+        Almost always the **wrong interface** — it must be loopback (`lo0` / `lo` / Windows's
+        `Adapter for loopback traffic capture`). Stop, reselect it, start again, log in again. Still
+        nothing (common on Windows +
         Docker Desktop)? Use the sample capture in [Troubleshooting](#troubleshooting).
 
 !!! success "📏 Record — what did the capture show?"
@@ -330,7 +332,8 @@ Your database is untouched — it lives in the `pgdata` volume, which neither co
 ??? bug "Wireshark shows nothing on loopback (Windows especially)"
     **Common cause — Npcap without loopback support (Windows).** Re-run the Npcap installer from
     [npcap.com](https://npcap.com/#download) alone, tick **"Support loopback traffic capture"**,
-    reboot, reopen Wireshark — the `Npcap Loopback Adapter` appears. Capture on it.
+    reboot, reopen Wireshark — an interface called **`Adapter for loopback traffic capture`** appears
+    (older Npcap named it `Npcap Loopback Adapter`). Capture on it.
 
     **Still nothing** (Docker Desktop's WSL2 VM can hide loopback traffic from Npcap)? Use the sample
     capture — a real HTTP login, so you can complete Finding 1 without capturing live:

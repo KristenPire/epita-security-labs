@@ -48,8 +48,9 @@ Install from [wireshark.org/download](https://www.wireshark.org/download.html).
     Log out and back in. Your loopback interface is `lo`.
 
 !!! success "Checkpoint"
-    Open Wireshark. In the interface list you can see a **loopback** interface (`lo0` / `lo` /
-    `Npcap Loopback Adapter`) and double-clicking it starts a live capture without an error.
+    Open Wireshark. In the interface list you can see a **loopback** interface — `lo0` (macOS) / `lo`
+    (Linux) / `Adapter for loopback traffic capture` (Windows; older Npcap: `Npcap Loopback Adapter`)
+    — and double-clicking it starts a live capture without an error.
 
 ## 3. NotesApp
 

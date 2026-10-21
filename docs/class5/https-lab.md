@@ -37,7 +37,7 @@ password — using **Wireshark**, a free tool anyone can download.
     **Start the app on plain HTTP:**
 
     ```bash
-    docker compose up -d
+    docker compose up -d     # start db + web in the background (-d = detached)
     ```
 
     Open <http://localhost:8080>, confirm the login page loads — but do **not** log in yet; get
@@ -54,6 +54,9 @@ password — using **Wireshark**, a free tool anyone can download.
         ```
         tcp.port == 8080 and http
         ```
+
+        This tells Wireshark to show **only** traffic on port `8080` (where NotesApp listens) that it
+        recognises as **HTTP** — hiding the noise so you can find your login.
 
     4. Click the blue shark-fin **Start capturing**.
     5. In the browser, log in as `alice` / `alicepw`.
@@ -107,42 +110,57 @@ network — the leg an outside attacker can never reach.
     Authority — hold that thought for Finding 2):
 
     ```bash
-    mkdir -p nginx/certs
+    mkdir -p nginx/certs       # folder nginx will read the cert + key from
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
       -keyout nginx/certs/notesapp.key \
       -out nginx/certs/notesapp.crt \
       -subj "/CN=localhost"
     ```
 
-    `notesapp.key` is the **private key** (never share it); `notesapp.crt` is the **certificate**
-    (public key + the domain it claims).
+    What each part of the `openssl` command means:
+
+    - `req -x509` — make a **self-signed certificate** (not a request sent to a real CA).
+    - `-nodes` — "no DES": don't passphrase-encrypt the private key, so nginx can read it unattended.
+    - `-days 365` — valid for a year.
+    - `-newkey rsa:2048` — generate a fresh 2048-bit RSA key pair at the same time.
+    - `-keyout` / `-out` — where to write the **private key** and the **certificate**.
+    - `-subj "/CN=localhost"` — the identity the cert claims: the domain `localhost`. (`CN` = Common
+      Name. This is the field your browser checks against the address bar — remember it for Finding 2.)
+
+    `notesapp.key` is the **private key** (never share it, never commit it); `notesapp.crt` is the
+    **certificate** (the public key + the domain it claims).
 
     **2. Write `nginx/nginx.conf`** with exactly this:
 
     ```nginx
+    # --- Plain HTTP (port 80): send everyone to HTTPS instead ---
     server {
-        listen 80;
+        listen 80;                                   # listen for plain http
         server_name localhost;
-        return 301 https://$host$request_uri;
+        return 301 https://$host$request_uri;        # permanent redirect to the https:// version
     }
 
+    # --- HTTPS (port 443): the encrypted entrance ---
     server {
-        listen 443 ssl;
+        listen 443 ssl;                              # listen for https, enable TLS
         server_name localhost;
 
-        ssl_certificate     /etc/nginx/certs/notesapp.crt;
-        ssl_certificate_key /etc/nginx/certs/notesapp.key;
+        ssl_certificate     /etc/nginx/certs/notesapp.crt;   # the cert you just generated
+        ssl_certificate_key /etc/nginx/certs/notesapp.key;   # its private key
 
-        location / {
-            proxy_pass http://web:5000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
+        location / {                                 # for every request path...
+            proxy_pass http://web:5000;              # ...forward to the Flask app, over the PRIVATE
+                                                     #    docker network (plain http, but unreachable
+                                                     #    from outside the containers)
+            proxy_set_header Host $host;             # pass the original hostname through
+            proxy_set_header X-Real-IP $remote_addr; # pass the client's IP through
         }
     }
     ```
 
-    Port 80 redirects to HTTPS; port 443 serves TLS with your cert; `proxy_pass` forwards to Flask
-    inside Docker only.
+    In one sentence: port 80 bounces everyone to HTTPS; port 443 does the TLS encryption with your
+    cert; `proxy_pass` hands the decrypted request to Flask **inside Docker**, the one leg an attacker
+    on the outside can never see.
 
     **3. Create `docker-compose.https.yml`** with this content. It adds nginx in front, and stops
     publishing the app's own port so the only way in is through HTTPS:
@@ -171,7 +189,9 @@ network — the leg an outside attacker can never reach.
     Then launch:
 
     ```bash
-    docker compose down
+    docker compose down          # stop the plain-HTTP stack first (frees the ports)
+    # bring it up with BOTH files: the base stack + the https overlay on top.
+    # -d = background (detached), --build = rebuild images if anything changed.
     docker compose -f docker-compose.yml -f docker-compose.https.yml up -d --build
     ```
 
@@ -196,7 +216,9 @@ A fix you cannot verify is not a fix. Prove it with the same attack.
     **Will your password be readable this time?** Commit to an answer.
 
 ??? note "How to re-capture under HTTPS (scaffolding)"
-    1. In Wireshark, set the filter to `tcp.port == 443` and start capturing.
+    1. In Wireshark, set the filter to `tcp.port == 443` (443 = the HTTPS port; no `http` keyword
+       this time, because the traffic is now TLS and Wireshark can't read it as HTTP) and start
+       capturing.
     2. Log in again at <https://localhost> as `alice` / `alicepw`.
     3. Stop. Right-click a row → **Follow** → **TLS Stream** (there is no HTTP stream to follow now).
 
@@ -292,8 +314,9 @@ STATE: NotesApp now served over HTTPS (self-signed, for the lab).  ✅
 Back to plain HTTP for whatever comes next:
 
 ```bash
+# stop the https stack (both files, so nginx is removed too)...
 docker compose -f docker-compose.yml -f docker-compose.https.yml down
-docker compose up -d
+docker compose up -d     # ...and start the plain-HTTP stack again
 ```
 
 Your database is untouched — it lives in the `pgdata` volume, which neither command deletes.

@@ -60,6 +60,7 @@ You are going to measure how strong that actually is.
     }
     with open("crack/leaked_users.txt", "w") as f:
         for username, password in accounts.items():
+            # store "username:md5(password)" - unsalted MD5, exactly like the bad app would
             f.write(f"{username}:{hashlib.md5(password.encode()).hexdigest()}\n")
     print("wrote crack/leaked_users.txt")
     ```
@@ -70,10 +71,11 @@ You are going to measure how strong that actually is.
     import hashlib, time
 
     def load_dump(path):
+        # read the leaked file into {username: md5_digest}
         out = {}
         with open(path) as f:
             for line in f:
-                u, d = line.strip().split(":")
+                u, d = line.strip().split(":")   # each line is "username:digest"
                 out[u] = d
         return out
 
@@ -82,17 +84,21 @@ You are going to measure how strong that actually is.
 
     start = time.time()
     cracked = {}
-    for candidate in wordlist:
-        cd = hashlib.md5(candidate.encode()).hexdigest()
-        for u, d in accounts.items():
-            if u not in cracked and d == cd:
+    for candidate in wordlist:                       # for each guess in the wordlist...
+        cd = hashlib.md5(candidate.encode()).hexdigest()   # hash the guess the SAME way the app did
+        for u, d in accounts.items():                # ...compare it to every leaked digest
+            if u not in cracked and d == cd:         # same digest => that guess IS the password
                 cracked[u] = candidate
     elapsed = time.time() - start
 
+    # the attack never "reverses" a hash - it just hashes guesses until one matches.
     print(f"cracked {len(cracked)} / {len(accounts)} in {elapsed*1000:.1f} ms")
     for u, p in cracked.items():
         print(f"  {u} : {p}")
     ```
+
+    The key idea in the comments: cracking **never reverses** a hash. It hashes ordinary guesses and
+    looks for a match — which is why a fast hash (MD5) and weak passwords are what make it work.
 
     Run it: `python3 crack/make_dump.py && python3 crack/crack.py`
     (Windows: use `python` instead of `python3`.)
@@ -155,8 +161,9 @@ Now fix it on the real app. You are adding Argon2 **and** upgrading each account
 next logs in — no migration script, no downtime. NotesApp should be running (`docker compose up -d`).
 
 ??? note "How to apply the fix (scaffolding — three small changes)"
-    Add the dependency — edit `web/requirements.txt`, add `argon2-cffi==23.1.0`, then
-    `docker compose build web`.
+    Add the dependency — edit `web/requirements.txt`, add `argon2-cffi==23.1.0` (the Argon2 library),
+    then `docker compose build web` (rebuilds the web image so the new library is installed inside it
+    — editing the file alone does nothing until you rebuild).
 
     In `web/app.py`, near the imports:
 
@@ -168,9 +175,11 @@ next logs in — no migration script, no downtime. NotesApp should be running (`
     Just below `app = Flask(__name__)`:
 
     ```python
-    ph = PasswordHasher()
+    ph = PasswordHasher()   # one reusable hasher: ph.hash(pw) to store, ph.verify(hash, pw) to check
 
     def is_argon2_hash(value: str) -> bool:
+        # every Argon2 hash starts with "$argon2"; a legacy plain-text password never does.
+        # this is how login() tells a migrated account from a not-yet-migrated one.
         return value.startswith("$argon2")
     ```
 
@@ -204,7 +213,8 @@ next logs in — no migration script, no downtime. NotesApp should be running (`
     3. Change the `if row:` line (after `conn.close()`) to `if authenticated:`. Everything below it
        stays as-is.
 
-    Rebuild: `docker compose up -d --build`.
+    Apply it: `docker compose up -d --build` (`--build` rebuilds the image with your new `app.py`,
+    `-d` runs it in the background).
 
 !!! danger "Whatever writes the code — you must understand the `else` branch"
     That `else` branch is the whole idea: an old plain-text account is checked once, then silently
@@ -217,6 +227,10 @@ next logs in — no migration script, no downtime. NotesApp should be running (`
 
 ??? success "Check it, and were you right?"
     ```bash
+    # peek straight into the database, bypassing the app:
+    #   exec db       -> run a command in the 'db' container
+    #   psql -U ... -d -> open the Postgres client as user 'notesapp' on db 'notesapp'
+    #   -c "SELECT..." -> run one query and exit: show how alice's password is stored
     docker compose exec db psql -U notesapp -d notesapp -c "SELECT username, password FROM users WHERE username = 'alice';"
     ```
 
@@ -241,20 +255,22 @@ the difference yourself.
 
 ??? note "How to measure (one command — runs inside the web container, which has Argon2)"
     ```bash
+    # "docker compose exec web python -" runs a Python script (fed on stdin, between <<'PY' and PY)
+    # INSIDE the web container, which is the one place argon2 is installed.
     docker compose exec web python - <<'PY'
     import hashlib, time
     from argon2 import PasswordHasher
 
     N = 100_000
     t = time.time()
-    for _ in range(N):
+    for _ in range(N):                       # hash 100,000 times to get a stable rate
         hashlib.md5(b"guess").hexdigest()
-    md5_rate = N / (time.time() - t)
+    md5_rate = N / (time.time() - t)         # guesses per second for MD5
     print(f"MD5    : {md5_rate:,.0f} guesses/second")
 
     ph = PasswordHasher()
     t = time.time()
-    ph.hash("guess")
+    ph.hash("guess")                         # ONE Argon2 hash - already slow enough to measure alone
     one = time.time() - t
     print(f"Argon2 : {one*1000:.0f} ms for ONE guess  ({1/one:.1f} guesses/second)")
     PY

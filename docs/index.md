@@ -20,7 +20,7 @@ Missing either one, and the other does not save you. Today you build both.
 
 !!! info "Project 2 launches today"
     Your group project — a [command-line password manager](project2.md) — starts at the end of this
-    class. Groups of 2–3, due **17 Nov**, 25% of your grade. Read the brief tonight.
+    class. Groups of 2–3, due **12 Nov**, 25% of your grade. Read the brief tonight.
 
 !!! warning "Ethics — only your own targets"
     Every attack in these labs runs **only** on data you generated yourself, from the course's own

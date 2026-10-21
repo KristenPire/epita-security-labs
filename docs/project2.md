@@ -5,7 +5,7 @@ or saw in class: Argon2 (Class 5, today), AES-GCM (Class 3), key derivation (Arg
 asymmetric encryption (Class 4).
 
 - **Groups of 2–3.**
-- **Starts 30 Oct · due 17 Nov** (hand in by end of day).
+- **Starts 22 Oct · due 12 Nov** (hand in by end of day).
 - **Worth 25% of your course grade.**
 
 !!! abstract "The deliverable is a working tool **and** a README that justifies every choice"
@@ -128,4 +128,4 @@ Short, but it must answer **why**, for each choice:
   everyone touches the crypto.
 - Reuse your own Class 5 Argon2 code and your Class 3 AES-GCM code as starting points.
 - Install what you need: `pip install argon2-cffi cryptography`.
-- Due **17 November** — code + README in one repository.
+- Due **12 November** — code + README in one repository.

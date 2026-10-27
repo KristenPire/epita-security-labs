@@ -208,6 +208,60 @@ curl -H "Authorization: Bearer $SIGNED" http://localhost:8080/api/notes/3
     - Did the **signed** forged token work? ________
     - This token has a valid signature. Would "reject `alg:none`" have stopped it? ________ (no)
 
+??? tip "Finished early? Brute force it — and watch *length* win, not the wordlist"
+    The wordlist cracked `s3cr3t` in under a second — but only because it is a **word**. What if the
+    secret were random, with no word to look up? Then you must try **every combination**. That is
+    brute force, and its only enemy is **length**.
+
+    You don't need to actually finish cracking (you already have the secret). Instead, measure how
+    fast *your* laptop guesses, and let it print the time wall:
+
+    ```bash
+    python3 - <<'PY'
+    import hmac, hashlib, base64, itertools, string, time
+    tok = "PASTE_ALICE_REAL_TOKEN_FROM_STEP_1"
+    head_payload = ".".join(tok.split(".")[:2])
+    def b64(b): return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+    charset = string.ascii_lowercase + string.digits     # 36 characters: a-z 0-9
+    # Time a quick sample of real guesses to learn this laptop's rate.
+    N, t0 = 100_000, time.time()
+    for i, combo in enumerate(itertools.product(charset, repeat=6)):
+        if i >= N: break
+        b64(hmac.new("".join(combo).encode(), head_payload.encode(), hashlib.sha256).digest())
+    rate = N / (time.time() - t0)
+    print(f"this laptop guesses ~{rate:,.0f} secrets/second in Python\n")
+
+    for length in range(4, 13):
+        combos = len(charset) ** length
+        secs = combos / rate
+        if   secs < 120:      t = f"{secs:.0f} seconds"
+        elif secs < 7200:     t = f"{secs/60:.0f} minutes"
+        elif secs < 172800:   t = f"{secs/3600:.1f} hours"
+        elif secs < 3.15e7:   t = f"{secs/86400:.0f} days"
+        else:                 t = f"{secs/3.15e7:,.0f} years"
+        mark = "  <- s3cr3t is here" if length == 6 else ""
+        print(f"  {length:2d} random chars: {combos:>22,} combos  ->  {t}{mark}")
+    PY
+    ```
+
+    Read the output. `s3cr3t`'s length (6) is already **hours** in Python. Each extra character
+    multiplies the time by 36. By 12 characters it is **millions of years** — and a real key is 32.
+    The wordlist won only because `s3cr3t` was a dictionary word; against a long *random* secret,
+    neither attack ever finishes. **That is fix #3: long AND random.**
+
+    ??? note "How a real attacker does it (no install needed to read this)"
+        Pure Python is slow. A real attacker points **hashcat** at a GPU, which tries *billions* per
+        second — it would crack a 6-char secret like `s3cr3t` in seconds:
+
+        ```bash
+        # 16500 = JWT mode; -a 3 = brute force; ?a = any printable char, one per position
+        hashcat -m 16500 token.txt -a 3 ?a?a?a?a?a?a
+        ```
+
+        Same wall, just a faster wall-breaker. Length is still the only thing that saves you: add
+        characters and even a GPU runs out of time.
+
 ??? question "Done? The lesson both halves add up to"
     ??? success "The answer"
         `alg:none` and a weak secret are **two different holes**, and closing one leaves the

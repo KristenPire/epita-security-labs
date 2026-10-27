@@ -213,7 +213,14 @@ curl -H "Authorization: Bearer $SIGNED" http://localhost:8080/api/notes/3
     secret were random, with no word to look up? Then you must try **every combination**. That is
     brute force, and its only enemy is **length**.
 
-    You don't need to actually finish cracking (you already have the secret). Instead, measure how
+    !!! info "You really *could* brute-force `s3cr3t` — it just takes ~2 hours"
+        `s3cr3t` is 6 characters, so pure brute force on your laptop finds it in about **2 hours**
+        (see the table below). To a real attacker, two hours is **nothing** — they start it and go
+        to lunch. It's only too long for *our class*. So in class we use the wordlist, which wins in
+        a second because the secret is a word. Both attacks work; the wordlist is just the fast one
+        for a one-hour slot.
+
+    You don't need to sit through the two hours (you already have the secret). Instead, measure how
     fast *your* laptop guesses, and let it print the time wall:
 
     ```bash
@@ -245,10 +252,11 @@ curl -H "Authorization: Bearer $SIGNED" http://localhost:8080/api/notes/3
     PY
     ```
 
-    Read the output. `s3cr3t`'s length (6) is already **hours** in Python. Each extra character
-    multiplies the time by 36. By 12 characters it is **millions of years** — and a real key is 32.
-    The wordlist won only because `s3cr3t` was a dictionary word; against a long *random* secret,
-    neither attack ever finishes. **That is fix #3: long AND random.**
+    Read the output. `s3cr3t`'s length (6) is about **2 hours** in Python — doable for an attacker,
+    just not for us. Each extra character multiplies the time by 36. By 12 characters it is
+    **millions of years** — and a real key is 32. The wordlist won only because `s3cr3t` was a
+    dictionary word; against a long *random* secret, neither the wordlist nor brute force ever
+    finishes. **That is fix #3: long AND random.**
 
     ??? note "How a real attacker does it (no install needed to read this)"
         Pure Python is slow. A real attacker points **hashcat** at a GPU, which tries *billions* per

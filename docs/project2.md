@@ -1,11 +1,11 @@
 # Project 2 — Password manager
 
 Build a small **command-line password manager** in Python. Everything it needs, you already built
-or saw in class: Argon2 (Class 5, today), AES-GCM (Class 3), key derivation (Argon2 again),
-asymmetric encryption (Class 4).
+or saw in class: Argon2 (Class 5), AES-GCM (Class 3), key derivation (Argon2 again), asymmetric
+encryption (Class 4).
 
 - **Groups of 2–3.**
-- **Starts 22 Oct · due 12 Nov** (hand in by end of day).
+- **Launched in class today · due 12 November** (hand in by end of day).
 - **Worth 25% of your course grade.**
 
 !!! abstract "The deliverable is a working tool **and** a README that justifies every choice"
@@ -101,7 +101,7 @@ A tool whose author knows its limits is worth more than one whose author thinks 
 
 Short, but it must answer **why**, for each choice:
 
-1. Why **Argon2** for the master password, and not SHA-256 or AES? (Think back to today's lab.)
+1. Why **Argon2** for the master password, and not SHA-256 or AES? (Think back to the Class 5 lab.)
 2. Why **derive** the encryption key from the master password instead of storing a key file?
 3. Why **AES-GCM** and not AES without authentication? What does the "GCM" part buy you?
 4. Why **`secrets`** and not `random` for generating passwords?

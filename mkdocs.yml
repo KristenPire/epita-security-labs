@@ -49,3 +49,5 @@ nav:
       - "Lab 2 — Password storage audit": class5/password-audit.md
   - "Class 6 — Authentication":
       - "Exercise — Forge a token": class6/forge-a-token.md
+  - "Class 7 — Fix the login":
+      - "Lab — Fix the login": class7/fix-the-login.md

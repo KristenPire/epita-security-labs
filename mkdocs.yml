@@ -51,4 +51,6 @@ nav:
       - "Exercise — Forge a token": class6/forge-a-token.md
   - "Class 7 — Fix the login":
       - "Lab — Fix the login": class7/fix-the-login.md
+  - "Class 8 — Access control":
+      - "Lab — Read anyone's grade": class8/read-anyones-grade.md
   - "Project 2 — Password manager": project2.md

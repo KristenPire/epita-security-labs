@@ -55,4 +55,6 @@ nav:
       - "Lab — Read anyone's grade": class8/read-anyones-grade.md
   - "Class 9 — Injection":
       - "Lab — Your words become commands": class9/injection.md
+  - "Class 10 — Stored XSS":
+      - "Lab — Your words run in someone's browser": class10/stored-xss.md
   - "Project 2 — Password manager": project2.md

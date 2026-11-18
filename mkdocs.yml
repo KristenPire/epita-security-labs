@@ -58,4 +58,6 @@ nav:
       - "Lab — Your words become commands": class9/injection.md
   - "Class 10 — Stored XSS":
       - "Lab — Your words run in someone's browser": class10/stored-xss.md
+  - "Class 11 — CSRF":
+      - "Lab — Requests you never meant to send": class11/csrf.md
   - "Project 2 — Password manager": project2.md

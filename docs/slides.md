@@ -15,3 +15,4 @@ speaker notes. Labs for each class are in the left menu.
 | 8 | Broken access control (IDOR) | [PDF](decks/class8-access-control.pdf){:download} |
 | 9 | Injection (SQL & command) | [PDF](decks/class9-injection.pdf){:download} |
 | 10 | Stored XSS | [PDF](decks/class10-stored-xss.pdf){:download} |
+| 11 | CSRF (cross-site request forgery) | [PDF](decks/class11-csrf.pdf){:download} |
